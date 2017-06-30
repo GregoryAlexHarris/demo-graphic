@@ -83,6 +83,14 @@ include_directories(
      ${OPENGL_LIBRARY}
      ${GLEW_LIBRARY})
 
+   add_executable(mathDemo mathDemo.cpp)
+
+    target_link_libraries(mathDemo bsg
+     ${MINVR_LIBRARY}
+     ${FREEGLUT_LIBRARY}
+     ${OPENGL_LIBRARY}
+     ${GLEW_LIBRARY})
+
     add_executable(textureDemoMinVR textureDemoMinVR.cpp)
 
 
@@ -92,13 +100,7 @@ include_directories(
      ${OPENGL_LIBRARY}
      ${GLEW_LIBRARY})
 
-    add_executable(objDemoMinVR objDemoMinVR.cpp)
-
-    target_link_libraries(objDemoMinVR bsg
-      ${MINVR_LIBRARY}
-      ${FREEGLUT_LIBRARY}
-      ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+  
 
     add_executable(kbDemoMinVR kbDemoMinVR.cpp)
 
