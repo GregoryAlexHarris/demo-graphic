@@ -29,16 +29,20 @@ invisibleObj4D(std::vector<glm::vec4> v
         _v = v;
 
 
-
 }
 /*Purpose: Method used to fix positioning of objects once the invisibleObj4D has projected
    its coordinates. Calls on the collection if needed*/
-void update(bsg::drawableCollection cubeCollection){
-        //For rotations, two vectors stay fixed
-        // cubeCollection.Orientation();
-        // cubeCollection.setPosition();
-        // cubeCollection.setScale();
+// void updateOrientation(glm::mat4 rotationMatrix){
+//
+//
+// }
+void updatePosition(){
+
 }
+void updateScale(){
+
+}
+
 // I am going to pass in three args, with index numbers indicating
 // the coordinates I want to be returned in the result.  Let the X
 // coordinate be zero, the Y is 1, the S is 2, and the T is 3.
@@ -365,185 +369,6 @@ void _initScene(){
         cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
-
-
-
-
-
-        //Start of inner cube
-
-        //
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, -1.0f, 1.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // //bigger cube
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, -2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, -2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, -2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, -2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, -2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        //
-        // //hypercube parts
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(-2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, 2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, 1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, -2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, -1.0f, -1.0f, 1.0f));
-        //
-        // cubeVertices.push_back(glm::vec4(2.0f, 2.0f, -2.0f, 2.0f));
-        // cubeVertices.push_back(glm::vec4(1.0f, 1.0f, -1.0f, 1.0f));
-
         std::vector<glm::vec4> cubeColors;
 
         //Inner cube
@@ -653,22 +478,39 @@ void _initScene(){
         cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
         cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
         cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        float angle = 70;
+        glm::mat4 xtRotation(1, 0, 0, 0,
+                             0, cos(angle), -sin(angle), 0,
+                             0, sin(angle), cos(angle), 0,
+                             0, 0, 0, 1);
 
+        glm::mat4 ytRotation(cos(angle), 0, sin(angle), 0,
+                             0, 1, 0, 0,
+                             -sin(angle), 0, cos(angle), 0,
+                             0, 0, 0, 1);
 
-        //Back cube
+        glm::mat4 stRotation(cos(angle), -sin(angle), 0, 0,
+                             sin(angle), cos(angle), 0, 0,
+                             0, 0, 1, 0,
+                             0, 0, 0, 1);
+
+        glm::mat4 xyRotation(1, 0, 0, 0,
+                             0, 1, 0, 0,
+                             0, 0, cos(angle), sin(angle),
+                             0, 0, sin(angle), cos(angle));
+
 
         _invisObj = new invisibleObj4D(cubeVertices);
+        //_invisObj.updateOrientation(xtRotation);
 
 
-
-        /*This is the correct structure for dropping a different coordinate for each shape
-           however using the cubeVertices, which are originally 3D, leads to missing sides*/
         _cubeSetOne = new drawableCompound4D(_shader, "cubeOne", _invisObj, 1, 2, 3, cubeColors);
         _cubeSetTwo = new drawableCompound4D(_shader, "cubeTwo", _invisObj, 0, 2, 3, cubeColors);
         _cubeSetThree = new drawableCompound4D(_shader, "cubeThree", _invisObj, 0, 1, 3, cubeColors);
         _cubeSetFour = new drawableCompound4D(_shader, "cubeFour", _invisObj, 0, 1, 2, cubeColors);
 
         _cubeCollection = new bsg::drawableCollection("cubes");
+        _invisObj->updateOrientation(xtRotation);
 
         _cubeCollection->addObject(_cubeSetOne);
         _cubeCollection->addObject(_cubeSetTwo);
