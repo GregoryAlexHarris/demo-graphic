@@ -100,7 +100,7 @@ void _load(){
 
 public:
 drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, invisibleObj4D
-                   * inviz, const int one,const int two,const int three) :
+                   * inviz, const int one,const int two,const int three,  std::vector<glm::vec4> colors) :
         drawableCompound(name, shader) {
         _inviz = inviz;
         _one = one;
@@ -108,6 +108,7 @@ drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, i
         _three = three;
         _obj = new bsg::drawableObj();
         _obj->addData(bsg::GLDATA_VERTICES, "position", _inviz->projection(_one,_two,_three));
+        _obj->addData(bsg::GLDATA_COLORS, "color", colors);
         _obj->setDrawType(GL_LINES);
         this->addObject(_obj);
 }
@@ -127,7 +128,7 @@ invisibleObj4D* _inviz;
 
 public:
 drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name
-                      )  {
+                       )  {
 
         std::vector<glm::vec4> cubeVertices;
         cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -326,10 +327,10 @@ drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string nam
 
         _inviz = new invisibleObj4D(cubeVertices);
 
-        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 1, 2, 3);
-        _cubeSetTwo = new drawableCompound4D(shader, "cubeTwo", _inviz, 0, 2, 3);
-        _cubeSetThree = new drawableCompound4D(shader, "cubeThree", _inviz, 0, 1, 3);
-        _cubeSetFour = new drawableCompound4D(shader, "cubeFour", _inviz, 0, 1, 2);
+        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 1, 2, 3, cubeColors);
+        _cubeSetTwo = new drawableCompound4D(shader, "cubeTwo", _inviz, 0, 2, 3, cubeColors);
+        _cubeSetThree = new drawableCompound4D(shader, "cubeThree", _inviz, 0, 1, 3, cubeColors);
+        _cubeSetFour = new drawableCompound4D(shader, "cubeFour", _inviz, 0, 1, 2, cubeColors);
         _cubeCollection = new bsg::drawableCollection("cubes");
 
         _cubeCollection->addObject(_cubeSetOne);
@@ -347,7 +348,7 @@ drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string nam
 
 }
 bsg::drawableCollection* getCubes(){
-    return _cubeCollection;
+        return _cubeCollection;
 }
 };
 class DemoVRApp : public MinVR::VRApp {
