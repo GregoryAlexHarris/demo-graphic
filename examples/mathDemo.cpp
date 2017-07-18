@@ -55,24 +55,27 @@ std::vector<glm::vec4> projection(int one, int two, int three) {
 
 //setOrientation is a method that applies a rotationMatrix to the list of vertices,
 //the rotationMatrix applied is determined based off three paramters, an angle
-//to determine how much to rotate, and two ints that determine which two coordinates will
-//be kept constant (If (0,1) is passed in, then we will have a rotation in the xy plane)
+//to determine how much to rotate, and two ints that determine which the cos and sin locations within
+//the matrix
 void setOrientation(float angle, int numOne, int numTwo){
         glm::mat4 rotation = glm::mat4();
-        rotation[numOne][numTwo] = cos(angle);
-        rotation[numOne][numTwo] = sin(angle);
+        rotation[numOne][numOne] = cos(angle);
+        rotation[numOne][numTwo] = -sin(angle);
         rotation[numTwo][numOne] = sin(angle);
         rotation[numTwo][numTwo] = cos(angle);
 
         std::vector<glm::vec4> out;
         for (std::vector<glm::vec4>::iterator it = _v.begin();
              it != _v.end(); it++) {
-                *it= rotation * (*it);
-                //out.push_back(glm::vec4(rotation * (*it)));
+                //*it= rotation * (*it);
+                out.push_back(glm::vec4(rotation * (*it)));
         }
         _v = out;
 
 
+}
+std::vector<glm::vec4> getVertices(){
+    return _v;
 }
 };
 
@@ -87,16 +90,7 @@ int _one, _two, _three;
 bsg::bsgPtr<bsg::drawableObj> _obj;
 
 
-void _load(){
-        _pShader->useProgram();
-        _pShader->load();
-        _totalModelMatrix = getModelMatrix();
 
-        //Takes in the first item of the list and sets data to 3 coords out of 4
-        //from the drawableObj
-        _obj->setData(bsg::GLDATA_VERTICES, _inviz->projection(_one,_two,_three));
-
-}
 
 public:
 drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, invisibleObj4D
@@ -112,7 +106,16 @@ drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, i
         _obj->setDrawType(GL_LINES);
         this->addObject(_obj);
 }
+void load(invisibleObj4D* invisible){
+        _pShader->useProgram();
+        _pShader->load();
+        _totalModelMatrix = getModelMatrix();
 
+        //Takes in the first item of the list and sets data to 3 coords out of 4
+        //from the drawableObj
+        _obj->setData(bsg::GLDATA_VERTICES, invisible->projection(_one,_two,_three));
+
+}
 };
 
 class drawableCompound4DCube {
@@ -339,16 +342,26 @@ drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string nam
         _cubeCollection->addObject(_cubeSetFour);
 
 
-        _cubeSetOne->setPosition(0.0f,5.0f,0.0f);
-        _cubeSetTwo->setPosition(-4.0f, 0.0f, 0.0f);
-        _cubeSetThree->setPosition(4.0f, 0.0f, 0.0f);
-        _cubeSetFour->setPosition(0.0f, -5.0, 0.0f);
+        //  _cubeSetOne->setPosition(0.0f,5.0f,0.0f);
+        //  _cubeSetTwo->setPosition(-4.0f, 0.0f, 0.0f);
+        //  _cubeSetThree->setPosition(4.0f, 0.0f, 0.0f);
+        //  _cubeSetFour->setPosition(0.0f, -5.0, 0.0f);
 
 
 
 }
 bsg::drawableCollection* getCubes(){
         return _cubeCollection;
+}
+invisibleObj4D* getInvisObj(){
+    return _inviz;
+}
+
+void updateCubes(){
+    _cubeSetOne->load(_inviz);
+    _cubeSetTwo->load(_inviz);
+    _cubeSetThree->load(_inviz);
+    _cubeSetFour->load(_inviz);
 }
 };
 class DemoVRApp : public MinVR::VRApp {
@@ -367,6 +380,7 @@ bsg::scene _scene;
 // in the variables global to this object so they can be available
 // in both the run() function and the renderScene() function.
 drawableCompound4DCube* _cube;
+bsg::drawableCollection* _cubes;
 bsg::drawableCompound* _axesSet;
 
 
@@ -375,8 +389,7 @@ bsg::drawableCompound* _axesSet;
 // interrupt handler and the render function.
 float _oscillator;
 float _oscillationStep;
-// float _rotator;
-// float _rotationStep;
+
 
 // These variables were not global before, but their scope has been
 // divided into several functions here, so they are class-wide
@@ -516,20 +529,14 @@ void _initScene(){
 
         std::vector<glm::vec4> vertices;
 
-        //Issues: invisibleObj4D originally designed to take in vertices and
-
-        //_invisObj = new invisibleObj4D(vertices);
-
 
         _cube = new drawableCompound4DCube(_shader, "cube");
-
-
+        _cubes = (_cube->getCubes());
         _axesSet = new bsg::drawableCompound(_shader);
         _axesSet->addObject(_axes);
 
         _scene.addObject(_axesSet);
-        _scene.addObject(_cube->getCubes());
-        //_scene.addObject(_cube->getCubes());
+        _scene.addObject(_cubes);
 }
 
 
@@ -547,8 +554,6 @@ DemoVRApp(int argc, char** argv) :
         _lights = new bsg::lightList();
 
         _oscillator = 0.0f;
-        //rotator = 0.0f;
-
         _vertexFile = std::string(argv[1]);
         _fragmentFile = std::string(argv[2]);
 
@@ -607,16 +612,21 @@ void onVRRenderGraphicsContext(const MinVR::VRGraphicsState &renderState) {
 void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
         // Only draw if the application is still running.
         if (isRunning()) {
-
                 // If you want to adjust the positions of the various objects in
                 // your scene, you can do that here.
+                //_oscillationStep = .005f;
 
                 //Oscillator goes here
-                // glm::vec3 pos = _cube.get->getPosition();
-                // pos.x = sin(_oscillator);
-                // pos.y = 1.0f - cos(_oscillator);
-                // _rectangle->setPosition(pos);
-                // _rectangle->setScale(sin(_oscillator));
+
+                glm::vec3 cubePos = _cubes->getPosition();
+               _oscillator += _oscillationStep;
+               cubePos.x = cos(_oscillator);
+               cubePos.y = 1.0f - cos(_oscillator);
+               _cubes->setPosition(cubePos);
+
+                _cube->getInvisObj()->setOrientation(cos(_oscillator),1,2);
+                _cube->updateCubes();
+
 
 
                 // Now the preliminaries are done, on to the actual drawing.
