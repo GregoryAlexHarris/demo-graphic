@@ -330,7 +330,7 @@ drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string nam
 
         _inviz = new invisibleObj4D(cubeVertices);
 
-        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 1, 2, 3, cubeColors);
+        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 0, 2, 1, cubeColors);
         _cubeSetTwo = new drawableCompound4D(shader, "cubeTwo", _inviz, 0, 2, 3, cubeColors);
         _cubeSetThree = new drawableCompound4D(shader, "cubeThree", _inviz, 0, 1, 3, cubeColors);
         _cubeSetFour = new drawableCompound4D(shader, "cubeFour", _inviz, 0, 1, 2, cubeColors);
@@ -553,7 +553,7 @@ DemoVRApp(int argc, char** argv) :
         _shader = new bsg::shaderMgr();
         _lights = new bsg::lightList();
 
-        _oscillator = 0.0f;
+        _oscillator = 4.0f;
         _vertexFile = std::string(argv[1]);
         _fragmentFile = std::string(argv[2]);
 
@@ -614,8 +614,9 @@ void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
         if (isRunning()) {
                 // If you want to adjust the positions of the various objects in
                 // your scene, you can do that here.
-                //_oscillationStep = .005f;
-
+                _oscillationStep = .005f;
+                float angle;
+                angle = 0.05;
                 //Oscillator goes here
 
                 glm::vec3 cubePos = _cubes->getPosition();
@@ -624,7 +625,9 @@ void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
                cubePos.y = 1.0f - cos(_oscillator);
                _cubes->setPosition(cubePos);
 
-                _cube->getInvisObj()->setOrientation(cos(_oscillator),1,2);
+               //_oscillator += _oscillationStep;
+               angle+= angle;
+                _cube->getInvisObj()->setOrientation(angle,1,2);
                 _cube->updateCubes();
 
 
