@@ -4,14 +4,11 @@
 #include <api/MinVR.h>
 
 //TO DO:
-//1. Delete updatePos & Scale, and rewrite setOrientation, multiply each vertex by
-// the rotationMatrix given, research easiest way to specify a 4D rotation
-//2. Write function with parameters of theta, and two coordinates that are being
-//left in(or out)
-//3. Animate rotations
-//Create a subclass of drawableCompound4D, called "drawableCompound4DCube",
-//put cubeVertices & colors in it
-//Set theta to be a oscillator
+//Ask about fake headtracker
+//Scale cube and any additional viewpoint changes
+//Lines->faces
+
+//Determine best way to draw planes, map plane into triangles based off input
 
 class drawableCompound4D;
 
@@ -117,6 +114,18 @@ void load(invisibleObj4D* invisible){
 
 }
 };
+
+class drawable4DFunction : public drawableCompound4D{
+private:
+float _numOne;
+float _numTwo;
+float _numThree;
+float _numFour;
+
+public:
+
+};
+
 
 class drawableCompound4DCube {
 private:
@@ -330,7 +339,7 @@ drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string nam
 
         _inviz = new invisibleObj4D(cubeVertices);
 
-        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 0, 2, 1, cubeColors);
+        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 1, 2, 3, cubeColors);
         _cubeSetTwo = new drawableCompound4D(shader, "cubeTwo", _inviz, 0, 2, 3, cubeColors);
         _cubeSetThree = new drawableCompound4D(shader, "cubeThree", _inviz, 0, 1, 3, cubeColors);
         _cubeSetFour = new drawableCompound4D(shader, "cubeFour", _inviz, 0, 1, 2, cubeColors);
@@ -342,10 +351,10 @@ drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string nam
         _cubeCollection->addObject(_cubeSetFour);
 
 
-        //  _cubeSetOne->setPosition(0.0f,5.0f,0.0f);
-        //  _cubeSetTwo->setPosition(-4.0f, 0.0f, 0.0f);
-        //  _cubeSetThree->setPosition(4.0f, 0.0f, 0.0f);
-        //  _cubeSetFour->setPosition(0.0f, -5.0, 0.0f);
+          _cubeSetOne->setPosition(0.0f,5.0f,0.0f);
+          _cubeSetTwo->setPosition(-4.0f, 0.0f, 0.0f);
+          _cubeSetThree->setPosition(4.0f, 0.0f, 0.0f);
+          _cubeSetFour->setPosition(0.0f, -5.0, 0.0f);
 
 
 
@@ -616,14 +625,14 @@ void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
                 // your scene, you can do that here.
                 _oscillationStep = .005f;
                 float angle;
-                angle = 0.05;
+                angle = 0.01;
                 //Oscillator goes here
 
-                glm::vec3 cubePos = _cubes->getPosition();
+                /*glm::vec3 cubePos = _cubes->getPosition();
                _oscillator += _oscillationStep;
                cubePos.x = cos(_oscillator);
                cubePos.y = 1.0f - cos(_oscillator);
-               _cubes->setPosition(cubePos);
+               _cubes->setPosition(cubePos);*/
 
                //_oscillator += _oscillationStep;
                angle+= angle;
