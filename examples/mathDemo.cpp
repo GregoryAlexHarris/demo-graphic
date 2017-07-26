@@ -3,10 +3,23 @@
 
 #include <api/MinVR.h>
 
+//TO DO:
+//Ask about fake headtracker
+//Scale cube and any additional viewpoint changes
+//Lines->faces
 
+//Determine best way to draw planes, map plane into triangles based off input
 
+//General form for a plane Ax+By+Cz+D=0
+
+//Fill in x,y, and then use functions already given to fill in s,t
+
+//Can use 4 projections for cube
+
+//Start with linear (1,1) function
+
+//After creating planes fork jtveite version of MinVR
 class drawableCompound4D;
-
 
 class invisibleObj4D {
 //Purpose: Contains the coordinates for a 4D Object and projects them onto
@@ -15,9 +28,8 @@ class invisibleObj4D {
 private:
 
 std::vector<glm::vec4> _v;
-
-
-
+bsg::bsgPtr<bsg::drawableObj> _plane;
+int _nEntries;
 public:
 /*Need to decide the types of each coordinate vertex
    How would I go from predefined vertices to getting functions->shapes
@@ -28,20 +40,61 @@ invisibleObj4D(std::vector<glm::vec4> v
                ){
         _v = v;
 
-
 }
-/*Purpose: Method used to fix positioning of objects once the invisibleObj4D has projected
-   its coordinates. Calls on the collection if needed*/
-// void updateOrientation(glm::mat4 rotationMatrix){
-//
-//
-// }
-void updatePosition(){
 
-}
-void updateScale(){
 
+//nX ad nY determine how many triangles will make up the plane
+invisibleObj4D( const float F, const float xMin, const float yMin, const float xMax, const float yMax, const int nX, const int nY){
+        _nEntries = 2 * (nX + 1);
+        if (nX > nY) {
+                _nEntries = 2 * (nX + 1);
+        }
+        if (nY > nX) {
+                _nEntries = 2 * (nY + 1);
+        }
+        std::vector<glm::vec4> planeVertices =  std::vector<glm::vec4>(_nEntries);
+        _plane = new bsg::drawableObj();
+
+        float x;
+        float y;
+        float s;
+        float t;
+
+        double xStep = .5;
+        double yStep = .5;
+
+
+        for (int i = 0; i <= nX; i++) {
+                for (int j = 0; j <= nY; j++) {
+
+                        //std::cout << "loop";
+                        x = xMin + i * xStep;
+                        y = yMin + j * yStep;
+                        s = F * x;
+                        t = F * y;
+                        int k = 2 * i;
+
+                        std::cout << " 1 "<< " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
+                        planeVertices[k] = glm::vec4(x,y,s,t);
+                        y = y + yStep;
+                        s = F * x;
+                        t = F * y;
+                        std::cout << " 2 "  << " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
+
+                        planeVertices[k+1] = glm::vec4(x,y,s,t);
+
+
+                }
+        }
+        _v = planeVertices;
+        _plane->addData(bsg::GLDATA_VERTICES, "position", planeVertices);
+        _plane->setDrawType(GL_TRIANGLE_STRIP, planeVertices.size());
 }
+
+
+
+
+
 
 // I am going to pass in three args, with index numbers indicating
 // the coordinates I want to be returned in the result.  Let the X
@@ -55,7 +108,40 @@ std::vector<glm::vec4> projection(int one, int two, int three) {
         return out;
 }
 
+
+
+//setOrientation is a method that applies a rotationMatrix to the list of vertices,
+//the rotationMatrix applied is determined based off three paramters, an angle
+//to determine how much to rotate, and two ints that determine which the cos and sin locations within
+//the matrix
+void setOrientation(float angle, int numOne, int numTwo){
+        glm::mat4 rotation = glm::mat4();
+        rotation[numOne][numOne] = cos(angle);
+        rotation[numOne][numTwo] = -sin(angle);
+        rotation[numTwo][numOne] = sin(angle);
+        rotation[numTwo][numTwo] = cos(angle);
+
+        std::vector<glm::vec4> out;
+        for (std::vector<glm::vec4>::iterator it = _v.begin();
+             it != _v.end(); it++) {
+                //*it= rotation * (*it);
+                out.push_back(glm::vec4(rotation * (*it)));
+        }
+        _v = out;
+
+
+}
+std::vector<glm::vec4> getVertices(){
+        return _v;
+}
+
+bsg::bsgPtr<bsg::drawableObj>  getPlaneSet(){
+        return _plane;
+}
 };
+
+
+
 
 
 
@@ -67,21 +153,9 @@ int _one, _two, _three;
 bsg::bsgPtr<bsg::drawableObj> _obj;
 
 
-void _load(){
-        _pShader->useProgram();
-        _pShader->load();
-        _totalModelMatrix = getModelMatrix();
-
-        //Takes in the first item of the list and sets data to 3 coords out of 4
-        //from the drawableObj
-        _obj->setData(bsg::GLDATA_VERTICES, _inviz->projection(_one,_two,_three));
-
-}
-
 public:
-//Smart Pointers auto keep track of how many times a variable is referenced
 drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, invisibleObj4D
-                   * inviz, const int one,const int two,const int three,  std::vector<glm::vec4> cubeColors) :
+                   * inviz, const int one,const int two,const int three,  std::vector<glm::vec4> colors) :
         drawableCompound(name, shader) {
         _inviz = inviz;
         _one = one;
@@ -89,13 +163,276 @@ drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, i
         _three = three;
         _obj = new bsg::drawableObj();
         _obj->addData(bsg::GLDATA_VERTICES, "position", _inviz->projection(_one,_two,_three));
-        _obj->addData(bsg::GLDATA_COLORS, "color", cubeColors);
+        _obj->addData(bsg::GLDATA_COLORS, "color", colors);
         _obj->setDrawType(GL_LINES);
         this->addObject(_obj);
+}
+void load(invisibleObj4D* invisible){
+        _pShader->useProgram();
+        _pShader->load();
+        _totalModelMatrix = getModelMatrix();
+
+        //Takes in the first item of the list and sets data to 3 coords out of 4
+        //from the drawableObj
+        _obj->setData(bsg::GLDATA_VERTICES, invisible->projection(_one,_two,_three));
+
+}
+
+bsg::bsgPtr<bsg::drawableObj> getObject(){
+        return _obj;
 }
 
 };
 
+
+class drawableCompound4DCube {
+private:
+
+drawableCompound4D* _cubeSetOne;
+drawableCompound4D* _cubeSetTwo;
+drawableCompound4D* _cubeSetThree;
+drawableCompound4D* _cubeSetFour;
+bsg::drawableCollection* _cubeCollection;
+
+invisibleObj4D* _inviz;
+
+public:
+drawableCompound4DCube(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name
+                       )  {
+
+        std::vector<glm::vec4> cubeVertices;
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+        std::vector<glm::vec4> cubeColors;
+
+        cubeColors.push_back(glm::vec4( .5f, 1.0f, .5f, 1.0f));
+        cubeColors.push_back(glm::vec4( .5f, 1.0f, .5f, 1.0f));
+        cubeColors.push_back(glm::vec4( .5f, 1.0f, .5f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 1.0f, .5f, 1.0f, 1.0f));
+        cubeColors.push_back(glm::vec4( .2f, .5f, 1.0f, 1.0f));
+        cubeColors.push_back(glm::vec4( 1.0f, .5f, 1.0f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( .3, 1.0f, .5f, 1.0f));
+        cubeColors.push_back(glm::vec4( 1.0f, .3f, .8f, 1.0f));
+        cubeColors.push_back(glm::vec4( 1.0f, 1.0f, .5f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( .2, 1.0f, .1f, 1.0f));
+        cubeColors.push_back(glm::vec4( .2, 1.0f, .1f, 1.0f));
+        cubeColors.push_back(glm::vec4( .2, 1.0f, .1f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( .1, .7f, .2f, 1.0f));
+        cubeColors.push_back(glm::vec4( .1, .7f, .2f, 1.0f));
+        cubeColors.push_back(glm::vec4( .4, .7f, .2f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.0f, .4f, 0.0f, 1.0f));
+        cubeColors.push_back(glm::vec4( .5, .2f, .23f, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.0f, .3f, 0.0f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.0f, .2f, 0.0f, 1.0f));
+        cubeColors.push_back(glm::vec4( .5, .2f, .23f, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.4f, .85f, 0.0f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.1f, .2f, 0.3f, 1.0f));
+        cubeColors.push_back(glm::vec4( .4, .5f, .6f, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.7f, .8f, 0.9f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.1f, .9f, 0.9f, 1.0f));
+        cubeColors.push_back(glm::vec4( .2, .2f, .2f, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.7f, .82f, 0.9f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.6f, .0f, 0.1f, 1.0f));
+        cubeColors.push_back(glm::vec4( .4, .0f, .0f, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.7f, .2f, 0.9f, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.33, 0.1, 0.11, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.33, 0.25, 0.91, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.33, 0.95, 0.91, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.35, 0.51, 0.87, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.35, 0.51, 0.87, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.35, 0.51, 0.87, 1.0f));
+
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
+
+        _inviz = new invisibleObj4D(cubeVertices);
+
+        _cubeSetOne = new drawableCompound4D(shader, "cubeOne", _inviz, 1, 2, 3, cubeColors);
+        _cubeSetTwo = new drawableCompound4D(shader, "cubeTwo", _inviz, 0, 2, 3, cubeColors);
+        _cubeSetThree = new drawableCompound4D(shader, "cubeThree", _inviz, 0, 1, 3, cubeColors);
+        _cubeSetFour = new drawableCompound4D(shader, "cubeFour", _inviz, 0, 1, 2, cubeColors);
+        _cubeCollection = new bsg::drawableCollection("cubes");
+
+
+
+        _cubeCollection->addObject(_cubeSetOne);
+        _cubeCollection->addObject(_cubeSetTwo);
+        _cubeCollection->addObject(_cubeSetThree);
+        _cubeCollection->addObject(_cubeSetFour);
+
+        _cubeSetOne->setPosition(0.0f,2.0f,0.0f);
+        _cubeSetTwo->setPosition(-2.0f, 0.0f, 0.0f);
+        _cubeSetThree->setPosition(2.0f, 0.0f, 0.0f);
+        _cubeSetFour->setPosition(0.0f, -2.0, 0.0f);
+
+
+
+}
+bsg::drawableCollection* getCubes(){
+        return _cubeCollection;
+}
+invisibleObj4D* getInvisObj(){
+        return _inviz;
+}
+
+void updateCubes(){
+        _cubeSetOne->load(_inviz);
+        _cubeSetTwo->load(_inviz);
+        _cubeSetThree->load(_inviz);
+        _cubeSetFour->load(_inviz);
+        _cubeCollection->setScale(glm::vec3(1.9f,1.9f,1.9f));
+}
+};
 
 class DemoVRApp : public MinVR::VRApp {
 
@@ -113,24 +450,26 @@ bsg::scene _scene;
 // in the variables global to this object so they can be available
 // in both the run() function and the renderScene() function.
 
-invisibleObj4D* _invisObj;
+invisibleObj4D* _plane;
 
+
+bsg::drawableRectangle* _rect;
+drawableCompound4DCube* _cube;
+bsg::drawableCollection* _cubes;
 bsg::drawableCompound* _axesSet;
-bsg::drawableCollection* _cubeCollection;
+bsg::drawableCollection* _planeCollection;
+drawableCompound4D* _planeSetOne;
+drawableCompound4D* _planeSetTwo;
+drawableCompound4D* _planeSetThree;
+drawableCompound4D* _planeSetFour;
 
-
-drawableCompound4D* _cubeSetOne;
-drawableCompound4D* _cubeSetTwo;
-drawableCompound4D* _cubeSetThree;
-drawableCompound4D* _cubeSetFour;
 
 // These are part of the animation stuff, and again are out here with
 // the big boy global variables so they can be available to both the
 // interrupt handler and the render function.
 float _oscillator;
 float _oscillationStep;
-// float _rotator;
-// float _rotationStep;
+
 
 // These variables were not global before, but their scope has been
 // divided into several functions here, so they are class-wide
@@ -190,9 +529,12 @@ void _checkContext() {
 
         // Now we're ready to start issuing OpenGL calls.  Start by enabling
         // the modes we want.  The DEPTH_TEST is how you get hidden faces.
+
         glEnable(GL_DEPTH_TEST);
-        glPolygonMode(GL_FRONT, GL_LINE);
-        glPolygonMode(GL_BACK, GL_LINE);
+
+        //Enales wireframe
+        // glPolygonMode(GL_FRONT, GL_LINE);
+        // glPolygonMode(GL_BACK, GL_LINE);
         if (glIsEnabled(GL_DEPTH_TEST)) {
                 std::cout << "Depth test enabled" << std::endl;
         } else {
@@ -268,266 +610,41 @@ void _initScene(){
         // The axes are not triangles, but lines.
         _axes->setDrawType(GL_LINES);
 
-        std::vector<glm::vec4> cubeVertices;
+        std::vector<glm::vec4> vertices;
+        _rect = new bsg::drawableRectangle(_shader,5,5,1);
 
+        _cube = new drawableCompound4DCube(_shader, "cube");
+        _cubes = (_cube->getCubes());
 
-        //start of actual tesseract
+        _planeCollection = new bsg::drawableCollection("planes");
 
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+        _plane = new invisibleObj4D(1, 0, 0, 8, 8, 4, 4 );
 
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+        _planeSetOne = new drawableCompound4D(_shader, "planeOne", _plane, 1,2, 3, axesColors);
+        _planeSetOne->getObject()->setDrawType(GL_TRIANGLE_STRIP);
+        _planeCollection->addObject(_planeSetOne);
 
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+        _planeSetTwo = new drawableCompound4D(_shader, "planeTwo", _plane, 0 ,2, 3, axesColors);
+        _planeSetTwo->getObject()->setDrawType(GL_TRIANGLE_STRIP);
+        _planeCollection->addObject(_planeSetTwo);
 
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
+        _planeSetThree = new drawableCompound4D(_shader, "planeThree", _plane, 0 ,1, 3, axesColors);
+        _planeSetThree->getObject()->setDrawType(GL_TRIANGLE_STRIP);
+        _planeCollection->addObject(_planeSetThree);
 
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        cubeVertices.push_back(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-        std::vector<glm::vec4> cubeColors;
-
-        //Inner cube
-        cubeColors.push_back(glm::vec4( .5f, 1.0f, .5f, 1.0f));
-        cubeColors.push_back(glm::vec4( .5f, 1.0f, .5f, 1.0f));
-        cubeColors.push_back(glm::vec4( .5f, 1.0f, .5f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 1.0f, .5f, 1.0f, 1.0f));
-        cubeColors.push_back(glm::vec4( .2f, .5f, 1.0f, 1.0f));
-        cubeColors.push_back(glm::vec4( 1.0f, .5f, 1.0f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( .3, 1.0f, .5f, 1.0f));
-        cubeColors.push_back(glm::vec4( 1.0f, .3f, .8f, 1.0f));
-        cubeColors.push_back(glm::vec4( 1.0f, 1.0f, .5f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( .2, 1.0f, .1f, 1.0f));
-        cubeColors.push_back(glm::vec4( .2, 1.0f, .1f, 1.0f));
-        cubeColors.push_back(glm::vec4( .2, 1.0f, .1f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( .1, .7f, .2f, 1.0f));
-        cubeColors.push_back(glm::vec4( .1, .7f, .2f, 1.0f));
-        cubeColors.push_back(glm::vec4( .4, .7f, .2f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.0f, .4f, 0.0f, 1.0f));
-        cubeColors.push_back(glm::vec4( .5, .2f, .23f, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.0f, .3f, 0.0f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.0f, .2f, 0.0f, 1.0f));
-        cubeColors.push_back(glm::vec4( .5, .2f, .23f, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.4f, .85f, 0.0f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.1f, .2f, 0.3f, 1.0f));
-        cubeColors.push_back(glm::vec4( .4, .5f, .6f, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.7f, .8f, 0.9f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.1f, .9f, 0.9f, 1.0f));
-        cubeColors.push_back(glm::vec4( .2, .2f, .2f, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.7f, .82f, 0.9f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.6f, .0f, 0.1f, 1.0f));
-        cubeColors.push_back(glm::vec4( .4, .0f, .0f, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.7f, .2f, 0.9f, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.33, 0.1, 0.11, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.33, 0.25, 0.91, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.33, 0.95, 0.91, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.35, 0.51, 0.87, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.35, 0.51, 0.87, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.35, 0.51, 0.87, 1.0f));
-
-
-        //Front cube
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        cubeColors.push_back(glm::vec4( 0.70, 0.70, 0.70, 1.0f));
-        float angle = 70;
-        glm::mat4 xtRotation(1, 0, 0, 0,
-                             0, cos(angle), -sin(angle), 0,
-                             0, sin(angle), cos(angle), 0,
-                             0, 0, 0, 1);
-
-        glm::mat4 ytRotation(cos(angle), 0, sin(angle), 0,
-                             0, 1, 0, 0,
-                             -sin(angle), 0, cos(angle), 0,
-                             0, 0, 0, 1);
-
-        glm::mat4 stRotation(cos(angle), -sin(angle), 0, 0,
-                             sin(angle), cos(angle), 0, 0,
-                             0, 0, 1, 0,
-                             0, 0, 0, 1);
-
-        glm::mat4 xyRotation(1, 0, 0, 0,
-                             0, 1, 0, 0,
-                             0, 0, cos(angle), sin(angle),
-                             0, 0, sin(angle), cos(angle));
-
-
-        _invisObj = new invisibleObj4D(cubeVertices);
-        //_invisObj.updateOrientation(xtRotation);
-
-
-        _cubeSetOne = new drawableCompound4D(_shader, "cubeOne", _invisObj, 1, 2, 3, cubeColors);
-        _cubeSetTwo = new drawableCompound4D(_shader, "cubeTwo", _invisObj, 0, 2, 3, cubeColors);
-        _cubeSetThree = new drawableCompound4D(_shader, "cubeThree", _invisObj, 0, 1, 3, cubeColors);
-        _cubeSetFour = new drawableCompound4D(_shader, "cubeFour", _invisObj, 0, 1, 2, cubeColors);
-
-        _cubeCollection = new bsg::drawableCollection("cubes");
-        _invisObj->updateOrientation(xtRotation);
-
-        _cubeCollection->addObject(_cubeSetOne);
-        _cubeCollection->addObject(_cubeSetTwo);
-        _cubeCollection->addObject(_cubeSetThree);
-        _cubeCollection->addObject(_cubeSetFour);
-
-        _cubeSetOne->setPosition(0.0f,5.0f,0.0f);
-        _cubeSetTwo->setPosition(-4.0f, 0.0f, 0.0f);
-        _cubeSetThree->setPosition(4.0f, 0.0f, 0.0f);
-        _cubeSetFour->setPosition(0.0f, -5.0, 0.0f);
+        _planeSetFour = new drawableCompound4D(_shader, "planeFour", _plane, 0 ,1, 2, axesColors);
+        _planeSetFour->getObject()->setDrawType(GL_TRIANGLE_STRIP);
+        _planeCollection->addObject(_planeSetFour);
 
         _axesSet = new bsg::drawableCompound(_shader);
         _axesSet->addObject(_axes);
+        _planeCollection->setScale(glm::vec3(2.0f,2.0f,2.0f));
+        _scene.addObject(_planeCollection);
 
-        _scene.addObject(_axesSet);
-        _scene.addObject(_cubeCollection);
-
+        //_scene.addObject(_rect);
+        //_scene.addObject(_axesSet);
+        //_scene.addObject(_cubes);
 }
 
 
@@ -544,9 +661,7 @@ DemoVRApp(int argc, char** argv) :
         _shader = new bsg::shaderMgr();
         _lights = new bsg::lightList();
 
-        _oscillator = 0.0f;
-        //rotator = 0.0f;
-
+        _oscillator = 4.0f;
         _vertexFile = std::string(argv[1]);
         _fragmentFile = std::string(argv[2]);
 
@@ -605,21 +720,19 @@ void onVRRenderGraphicsContext(const MinVR::VRGraphicsState &renderState) {
 void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
         // Only draw if the application is still running.
         if (isRunning()) {
-
                 // If you want to adjust the positions of the various objects in
                 // your scene, you can do that here.
+                _oscillationStep = .005f;
+                float angle;
+                angle = 0.01;
 
-                glm::vec3 cubePos = _cubeCollection->getPosition();
-                _oscillator += _oscillationStep;
-                cubePos.x = cos(_oscillator);
-                cubePos.y = 1.0f - cos(_oscillator);
-                _cubeCollection->setPosition(cubePos);
+                //_oscillator += _oscillationStep;
+                angle+= angle;
+                _cube->getInvisObj()->setOrientation(angle,1,2);
+                _cube->updateCubes();
 
-                // glm::quat cubeOrientation = _cubeCollection->getOrientation();
-                // _rotator += _rotationStep;
-                // cubeOrientation.x =1.0f - sin(_rotator);
-                // cubeOrientation.y = 1.0f - sin(_rotator);
-                // _cubeCollection->setOrientation(cubeOrientation);
+
+
 
                 // Now the preliminaries are done, on to the actual drawing.
 
