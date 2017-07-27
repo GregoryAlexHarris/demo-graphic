@@ -36,66 +36,63 @@ public:
    Ex: Given the input: r cos 0, r sin 0, r^2 cos 2 0, r^2 sin 2 0), domain could
    be (-1,1), changes in height creates surfaces*/
 
-invisibleObj4D(std::vector<glm::vec4> v
-               ){
+invisibleObj4D(std::vector<glm::vec4> v){
         _v = v;
 
 }
 
 
 //nX ad nY determine how many triangles will make up the plane
-invisibleObj4D( const float F, const float xMin, const float yMin, const float xMax, const float yMax, const int nX, const int nY){
+invisibleObj4D( const float F, 
+		const float xMin, const float yMin, 
+		const float xMax, const float yMax, 
+		const int nX, const int nY){
 
 
-        std::vector<glm::vec4> planeVertices;
-        _plane = new bsg::drawableObj();
+  std::vector<glm::vec4> planeVertices;
+  _plane = new bsg::drawableObj();
 
-        float x;
-        float y;
-        float s;
-        float t;
+  float x;
+  float y;
+  float s;
+  float t;
 
-        float xStep = (xMax - xMin) / nX;
-        float yStep = (yMax - yMin)/ nY;
+  float xStep = (xMax - xMin) / nX;
+  float yStep = (yMax - yMin)/ nY;
 
-        for (int j = 0; j < nX; j++)     {
-                y = yMin + j * yStep;
+  for (int j = 0; j < nX; j++)     {
+    y = yMin + j * yStep;
 
-                if (j != 0) {
-                        s = F * xMin;
-                        t = F * y;
-                        planeVertices.push_back(glm::vec4(xMin,y,s,t));
+    if (j != 0) {
+      s = F * (xMin * xMin - y * y);
+      t = F * 2 * x * y;
+      planeVertices.push_back(glm::vec4(xMin,y,s,t));
 
-                }
-                for (int i = 0; i <= nX; i++) {
+    }
+    for (int i = 0; i <= nX; i++) {
 
-
-                        x = xMin + i * xStep;
-                        s = F * x;
-                        t = F * y;
-
-
-                        std::cout << " 1 "<< " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
-                        planeVertices.push_back(glm::vec4(x,y,s,t));
-
-                        s = F * x;
-                        t = F * (y + yStep);
-                        std::cout << " 2 "  << " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
+      
+      x = xMin + i * xStep;
+      s = F * (x*x - y * y);
+      t = F * 2 * x * y;
 
 
-                        planeVertices.push_back(glm::vec4(x,y,s,t));
-                        if (i == nX) {
-                                planeVertices.push_back(glm::vec4(x,y,s,t));
+      std::cout << " 1 "<< " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
+      planeVertices.push_back(glm::vec4(x,y,s,t));
 
-                        }
+      s = F * (x*x - y * y);
+      t = F * 2 * x * (y + yStep);
+      std::cout << " 2 "  << " x " << x << " y " << y + yStep << " s " << s << " t " << t << std::endl;
 
 
-                }
-        }
-        _v = planeVertices;
+      planeVertices.push_back(glm::vec4(x,y + yStep,s,t));
+      if (i == nX) {
+	planeVertices.push_back(glm::vec4(x,y + yStep,s,t));
 
-        // _plane->addData(bsg::GLDATA_VERTICES, "position", planeVertices);
-        // _plane->setDrawType(GL_TRIANGLE_STRIP, planeVertices.size());
+      }
+    }
+  }
+  _v = planeVertices;
 }
 
 
@@ -107,36 +104,40 @@ invisibleObj4D( const float F, const float xMin, const float yMin, const float x
 // the coordinates I want to be returned in the result.  Let the X
 // coordinate be zero, the Y is 1, the S is 2, and the T is 3.
 std::vector<glm::vec4> projection(int one, int two, int three) {
-        std::vector<glm::vec4> out;
-        for (std::vector<glm::vec4>::iterator it = _v.begin();
-             it != _v.end(); it++) {
-                out.push_back(glm::vec4((*it)[one], (*it)[two], (*it)[three],1.0));
-        }
-        return out;
+  std::vector<glm::vec4> out;
+  for (std::vector<glm::vec4>::iterator it = _v.begin();
+       it != _v.end(); it++) {
+    out.push_back(glm::vec4((*it)[one], (*it)[two], (*it)[three],1.0));
+  }
+  return out;
 }
 
 
 
-//setOrientation is a method that applies a rotationMatrix to the list of vertices,
-//the rotationMatrix applied is determined based off three paramters, an angle
-//to determine how much to rotate, and two ints that determine which the cos and sin locations within
-//the matrix
+// setOrientation is a method that applies a rotationMatrix to the list
+// of vertices, the rotationMatrix applied is determined based off
+// three paramters, an angle to determine how much to rotate, and two
+// ints that determine which the cos and sin locations within the
+// matrix
 void setOrientation(float angle, int numOne, int numTwo){
-        glm::mat4 rotation = glm::mat4();
-        rotation[numOne][numOne] = cos(angle);
-        rotation[numOne][numTwo] = -sin(angle);
-        rotation[numTwo][numOne] = sin(angle);
-        rotation[numTwo][numTwo] = cos(angle);
 
-        std::vector<glm::vec4> out;
-        for (std::vector<glm::vec4>::iterator it = _v.begin();
-             it != _v.end(); it++) {
-                //*it= rotation * (*it);
-                out.push_back(glm::vec4(rotation * (*it)));
-        }
-        _v = out;
+  std::cout << "angle=" << angle << ", " 
+	    << _v[5].x << ", " 
+	    << _v[5].y << ", " 
+	    << _v[5].z << ", " 
+	    << _v[5].w << std::endl;
 
+  glm::mat4 rotation = glm::mat4();
+  rotation[numOne][numOne] = cos(angle);
+  rotation[numOne][numTwo] = -sin(angle);
+  rotation[numTwo][numOne] = sin(angle);
+  rotation[numTwo][numTwo] = cos(angle);
 
+  std::vector<glm::vec4> out;
+  for (std::vector<glm::vec4>::iterator it = _v.begin();
+       it != _v.end(); it++) {
+    (*it) = rotation * (*it);
+  }
 }
 std::vector<glm::vec4> getVertices(){
         return _v;
@@ -174,15 +175,21 @@ drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, i
         _obj->setDrawType(GL_LINES);
         this->addObject(_obj);
 }
-void load(invisibleObj4D* invisible){
+
+void load(){
         _pShader->useProgram();
         _pShader->load();
         _totalModelMatrix = getModelMatrix();
 
         //Takes in the first item of the list and sets data to 3 coords out of 4
         //from the drawableObj
-        _obj->setData(bsg::GLDATA_VERTICES, invisible->projection(_one,_two,_three));
+        (*_objects.begin())->setData(bsg::GLDATA_VERTICES, _inviz->projection(_one,_two,_three));
 
+  // Load each component object.
+  for (DrawableObjList::iterator it = _objects.begin();
+       it != _objects.end(); it++) {
+    (*it)->load();
+  }
 }
 
 bsg::bsgPtr<bsg::drawableObj> getObject(){
@@ -432,13 +439,13 @@ invisibleObj4D* getInvisObj(){
         return _inviz;
 }
 
-void updateCubes(){
-        _cubeSetOne->load(_inviz);
-        _cubeSetTwo->load(_inviz);
-        _cubeSetThree->load(_inviz);
-        _cubeSetFour->load(_inviz);
-        _cubeCollection->setScale(glm::vec3(1.9f,1.9f,1.9f));
-}
+// void updateCubes(){
+//         _cubeSetOne->load(_inviz);
+//         _cubeSetTwo->load(_inviz);
+//         _cubeSetThree->load(_inviz);
+//         _cubeSetFour->load(_inviz);
+//         _cubeCollection->setScale(glm::vec3(1.9f,1.9f,1.9f));
+// }
 };
 
 class DemoVRApp : public MinVR::VRApp {
@@ -625,7 +632,6 @@ void _initScene(){
 
         _planeCollection = new bsg::drawableCollection("planes");
 
-
         _plane = new invisibleObj4D(1, 0, 0, 4, 4, 4, 4 );
 
         _planeSetOne = new drawableCompound4D(_shader, "planeOne", _plane, 1,2, 3, axesColors);
@@ -668,7 +674,7 @@ DemoVRApp(int argc, char** argv) :
         _shader = new bsg::shaderMgr();
         _lights = new bsg::lightList();
 
-        _oscillator = 4.0f;
+        _oscillator = 0.0f;
         _vertexFile = std::string(argv[1]);
         _fragmentFile = std::string(argv[2]);
 
@@ -695,7 +701,7 @@ void onVREvent(const MinVR::VREvent &event) {
         if (event.getName() == "KbdEsc_Down") {
                 shutdown();
         } else if (event.getName() == "FrameStart") {
-                _oscillator = event.getDataAsFloat("ElapsedSeconds");
+	  //_oscillator = event.getDataAsFloat("ElapsedSeconds");
         }
 
         // Print out where you are (where the camera is) and where you're
@@ -729,17 +735,11 @@ void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
         if (isRunning()) {
                 // If you want to adjust the positions of the various objects in
                 // your scene, you can do that here.
-                _oscillationStep = .005f;
-                float angle;
-                angle = 0.01;
+                _oscillationStep = .00001f;
 
-                //_oscillator += _oscillationStep;
-                angle+= angle;
-                _cube->getInvisObj()->setOrientation(angle,1,2);
-                _cube->updateCubes();
-
-
-
+                _oscillator += _oscillationStep;
+                _cube->getInvisObj()->setOrientation(_oscillator,1,2);
+                _plane->setOrientation(_oscillator,1,2);
 
                 // Now the preliminaries are done, on to the actual drawing.
 
