@@ -45,14 +45,9 @@ invisibleObj4D(std::vector<glm::vec4> v
 
 //nX ad nY determine how many triangles will make up the plane
 invisibleObj4D( const float F, const float xMin, const float yMin, const float xMax, const float yMax, const int nX, const int nY){
-        _nEntries = 2 * (nX + 1);
-        if (nX > nY) {
-                _nEntries = 2 * (nX + 1);
-        }
-        if (nY > nX) {
-                _nEntries = 2 * (nY + 1);
-        }
-        std::vector<glm::vec4> planeVertices =  std::vector<glm::vec4>(_nEntries);
+
+
+        std::vector<glm::vec4> planeVertices;
         _plane = new bsg::drawableObj();
 
         float x;
@@ -60,35 +55,47 @@ invisibleObj4D( const float F, const float xMin, const float yMin, const float x
         float s;
         float t;
 
-        double xStep = .5;
-        double yStep = .5;
+        float xStep = (xMax - xMin) / nX;
+        float yStep = (yMax - yMin)/ nY;
+
+        for (int j = 0; j < nX; j++)     {
+                y = yMin + j * yStep;
+
+                if (j != 0) {
+                        s = F * xMin;
+                        t = F * y;
+                        planeVertices.push_back(glm::vec4(xMin,y,s,t));
+
+                }
+                for (int i = 0; i <= nX; i++) {
 
 
-        for (int i = 0; i <= nX; i++) {
-                for (int j = 0; j <= nY; j++) {
-
-                        //std::cout << "loop";
                         x = xMin + i * xStep;
-                        y = yMin + j * yStep;
                         s = F * x;
                         t = F * y;
-                        int k = 2 * i;
+
 
                         std::cout << " 1 "<< " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
-                        planeVertices[k] = glm::vec4(x,y,s,t);
-                        y = y + yStep;
+                        planeVertices.push_back(glm::vec4(x,y,s,t));
+
                         s = F * x;
-                        t = F * y;
+                        t = F * (y + yStep);
                         std::cout << " 2 "  << " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
 
-                        planeVertices[k+1] = glm::vec4(x,y,s,t);
+
+                        planeVertices.push_back(glm::vec4(x,y,s,t));
+                        if (i == nX) {
+                                planeVertices.push_back(glm::vec4(x,y,s,t));
+
+                        }
 
 
                 }
         }
         _v = planeVertices;
-        _plane->addData(bsg::GLDATA_VERTICES, "position", planeVertices);
-        _plane->setDrawType(GL_TRIANGLE_STRIP, planeVertices.size());
+
+        // _plane->addData(bsg::GLDATA_VERTICES, "position", planeVertices);
+        // _plane->setDrawType(GL_TRIANGLE_STRIP, planeVertices.size());
 }
 
 
@@ -611,7 +618,7 @@ void _initScene(){
         _axes->setDrawType(GL_LINES);
 
         std::vector<glm::vec4> vertices;
-        _rect = new bsg::drawableRectangle(_shader,5,5,1);
+        _rect = new bsg::drawableRectangle(_shader,5,5,4);
 
         _cube = new drawableCompound4DCube(_shader, "cube");
         _cubes = (_cube->getCubes());
@@ -619,29 +626,29 @@ void _initScene(){
         _planeCollection = new bsg::drawableCollection("planes");
 
 
-        _plane = new invisibleObj4D(1, 0, 0, 8, 8, 4, 4 );
+        _plane = new invisibleObj4D(1, 0, 0, 4, 4, 4, 4 );
 
         _planeSetOne = new drawableCompound4D(_shader, "planeOne", _plane, 1,2, 3, axesColors);
         _planeSetOne->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetOne);
 
-        _planeSetTwo = new drawableCompound4D(_shader, "planeTwo", _plane, 0 ,2, 3, axesColors);
+        _planeSetTwo = new drawableCompound4D(_shader, "planeTwo", _plane, 0,2, 3, axesColors);
         _planeSetTwo->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetTwo);
 
-        _planeSetThree = new drawableCompound4D(_shader, "planeThree", _plane, 0 ,1, 3, axesColors);
+        _planeSetThree = new drawableCompound4D(_shader, "planeThree", _plane, 0,1, 3, axesColors);
         _planeSetThree->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetThree);
 
-        _planeSetFour = new drawableCompound4D(_shader, "planeFour", _plane, 0 ,1, 2, axesColors);
+        _planeSetFour = new drawableCompound4D(_shader, "planeFour", _plane, 0,1, 2, axesColors);
         _planeSetFour->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetFour);
 
         _axesSet = new bsg::drawableCompound(_shader);
         _axesSet->addObject(_axes);
-        _planeCollection->setScale(glm::vec3(2.0f,2.0f,2.0f));
-        _scene.addObject(_planeCollection);
+        //_planeCollection->setScale(glm::vec3(2.0f,2.0f,2.0f));
 
+        _scene.addObject(_planeCollection);
         //_scene.addObject(_rect);
         //_scene.addObject(_axesSet);
         //_scene.addObject(_cubes);
