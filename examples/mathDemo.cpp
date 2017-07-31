@@ -4,21 +4,9 @@
 #include <api/MinVR.h>
 
 //TO DO:
-//Ask about fake headtracker
-//Scale cube and any additional viewpoint changes
-//Lines->faces
 
-//Determine best way to draw planes, map plane into triangles based off input
+//Get working with MinVR2
 
-//General form for a plane Ax+By+Cz+D=0
-
-//Fill in x,y, and then use functions already given to fill in s,t
-
-//Can use 4 projections for cube
-
-//Start with linear (1,1) function
-
-//After creating planes fork jtveite version of MinVR
 class drawableCompound4D;
 
 class invisibleObj4D {
@@ -43,9 +31,9 @@ invisibleObj4D(std::vector<glm::vec4> v){
 
 
 //nX ad nY determine how many triangles will make up the plane
-invisibleObj4D( const float F, 
-		const float xMin, const float yMin, 
-		const float xMax, const float yMax, 
+invisibleObj4D( const float F,
+		const float xMin, const float yMin,
+		const float xMax, const float yMax,
 		const int nX, const int nY){
 
 
@@ -66,28 +54,27 @@ invisibleObj4D( const float F,
     if (j != 0) {
       s = F * (xMin * xMin - y * y);
       t = F * 2 * x * y;
-      planeVertices.push_back(glm::vec4(xMin,y,s,t));
+      planeVertices.push_back(glm::vec4(xMin,y,0,0));
 
     }
     for (int i = 0; i <= nX; i++) {
 
-      
       x = xMin + i * xStep;
       s = F * (x*x - y * y);
       t = F * 2 * x * y;
 
 
       std::cout << " 1 "<< " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
-      planeVertices.push_back(glm::vec4(x,y,s,t));
+      planeVertices.push_back(glm::vec4(x,y,0,0));
 
       s = F * (x*x - y * y);
       t = F * 2 * x * (y + yStep);
       std::cout << " 2 "  << " x " << x << " y " << y + yStep << " s " << s << " t " << t << std::endl;
 
 
-      planeVertices.push_back(glm::vec4(x,y + yStep,s,t));
+      planeVertices.push_back(glm::vec4(x,y + yStep,0,0));
       if (i == nX) {
-	planeVertices.push_back(glm::vec4(x,y + yStep,s,t));
+	planeVertices.push_back(glm::vec4(x,y + yStep,0,0));
 
       }
     }
@@ -119,18 +106,20 @@ std::vector<glm::vec4> projection(int one, int two, int three) {
 // three paramters, an angle to determine how much to rotate, and two
 // ints that determine which the cos and sin locations within the
 // matrix
-void setOrientation(float angle, int numOne, int numTwo){
+void setOrientation(float oscillator, int numOne, int numTwo){
 
-  std::cout << "angle=" << angle << ", " 
-	    << _v[5].x << ", " 
-	    << _v[5].y << ", " 
-	    << _v[5].z << ", " 
+float angle = oscillator; //* .01f;
+glm::mat4 rotation = glm::mat4();
+
+  std::cout << "angle=" << angle << ", "
+	    << _v[5].x << ", "
+	    << _v[5].y << ", "
+	    << _v[5].z << ", "
 	    << _v[5].w << std::endl;
 
-  glm::mat4 rotation = glm::mat4();
   rotation[numOne][numOne] = cos(angle);
-  rotation[numOne][numTwo] = -sin(angle);
-  rotation[numTwo][numOne] = sin(angle);
+  rotation[numOne][numTwo] = sin(angle);
+  rotation[numTwo][numOne] = -sin(angle);
   rotation[numTwo][numTwo] = cos(angle);
 
   std::vector<glm::vec4> out;
@@ -138,6 +127,7 @@ void setOrientation(float angle, int numOne, int numTwo){
        it != _v.end(); it++) {
     (*it) = rotation * (*it);
   }
+
 }
 std::vector<glm::vec4> getVertices(){
         return _v;
@@ -174,6 +164,8 @@ drawableCompound4D(bsg::bsgPtr<bsg::shaderMgr> shader, const std::string name, i
         _obj->addData(bsg::GLDATA_COLORS, "color", colors);
         _obj->setDrawType(GL_LINES);
         this->addObject(_obj);
+        this->load();
+
 }
 
 void load(){
@@ -547,8 +539,8 @@ void _checkContext() {
         glEnable(GL_DEPTH_TEST);
 
         //Enales wireframe
-        // glPolygonMode(GL_FRONT, GL_LINE);
-        // glPolygonMode(GL_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT, GL_LINE);
+        glPolygonMode(GL_BACK, GL_LINE);
         if (glIsEnabled(GL_DEPTH_TEST)) {
                 std::cout << "Depth test enabled" << std::endl;
         } else {
@@ -634,25 +626,42 @@ void _initScene(){
 
         _plane = new invisibleObj4D(1, 0, 0, 4, 4, 4, 4 );
 
-        _planeSetOne = new drawableCompound4D(_shader, "planeOne", _plane, 1,2, 3, axesColors);
+        std::vector<glm::vec4> planeOneColors;
+        for (int i = 0; i < _plane->getVertices().size(); i++){
+            planeOneColors.push_back(glm::vec4(0.26, 1.0, 0.0, 1));
+        }
+        std::vector<glm::vec4> planeTwoColors;
+        for (int i = 0; i < _plane->getVertices().size(); i++){
+            planeTwoColors.push_back(glm::vec4(0.1, 0.84, 1.0, 1));
+        }
+        std::vector<glm::vec4> planeThreeColors;
+        for (int i = 0; i < _plane->getVertices().size(); i++){
+            planeThreeColors.push_back(glm::vec4(1.0, 0.1, 0.1, 1));
+        }
+        std::vector<glm::vec4> planeFourColors;
+        for (int i = 0; i < _plane->getVertices().size(); i++){
+            planeFourColors.push_back(glm::vec4(0.98, 1.0, 0.1, 1));
+        }
+        _planeSetOne = new drawableCompound4D(_shader, "planeOne", _plane, 1, 2, 3, planeOneColors);
         _planeSetOne->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetOne);
 
-        _planeSetTwo = new drawableCompound4D(_shader, "planeTwo", _plane, 0,2, 3, axesColors);
+        _planeSetTwo = new drawableCompound4D(_shader, "planeTwo", _plane, 0, 2, 3, planeTwoColors);
         _planeSetTwo->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetTwo);
 
-        _planeSetThree = new drawableCompound4D(_shader, "planeThree", _plane, 0,1, 3, axesColors);
+        _planeSetThree = new drawableCompound4D(_shader, "planeThree", _plane, 0, 1, 3, planeThreeColors);
         _planeSetThree->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetThree);
 
-        _planeSetFour = new drawableCompound4D(_shader, "planeFour", _plane, 0,1, 2, axesColors);
+        _planeSetFour = new drawableCompound4D(_shader, "planeFour", _plane, 0, 1, 2, planeFourColors);
         _planeSetFour->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetFour);
 
         _axesSet = new bsg::drawableCompound(_shader);
         _axesSet->addObject(_axes);
-        //_planeCollection->setScale(glm::vec3(2.0f,2.0f,2.0f));
+        _cube->getCubes()->setScale(glm::vec3(2.0f,2.0f,2.0f));
+        _planeCollection->setScale(glm::vec3(1.5f,1.5f,1.5f));
 
         _scene.addObject(_planeCollection);
         //_scene.addObject(_rect);
@@ -674,7 +683,7 @@ DemoVRApp(int argc, char** argv) :
         _shader = new bsg::shaderMgr();
         _lights = new bsg::lightList();
 
-        _oscillator = 0.0f;
+        _oscillator = 0.001f;
         _vertexFile = std::string(argv[1]);
         _fragmentFile = std::string(argv[2]);
 
@@ -735,9 +744,11 @@ void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
         if (isRunning()) {
                 // If you want to adjust the positions of the various objects in
                 // your scene, you can do that here.
-                _oscillationStep = .00001f;
+                // _oscillationStep = .01f;
+                //
+                // _oscillator += _oscillationStep;
 
-                _oscillator += _oscillationStep;
+                //Calls on the invisibleObj4D as we want to change the rotation matrix within 4 space
                 _cube->getInvisObj()->setOrientation(_oscillator,1,2);
                 _plane->setOrientation(_oscillator,1,2);
 
