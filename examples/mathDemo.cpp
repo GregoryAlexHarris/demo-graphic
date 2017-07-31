@@ -53,28 +53,28 @@ invisibleObj4D( const float F,
 
     if (j != 0) {
       s = F * (xMin * xMin - y * y);
-      t = F * 2 * x * y;
-      planeVertices.push_back(glm::vec4(xMin,y,0,0));
-
+      t = F * 2 * xMin * y;
+      planeVertices.push_back(glm::vec4(xMin,y,s,t));
+      std::cout << " 0 "<< " x " << xMin << " y " << y << " s " << s << " t " << t << std::endl;
     }
     for (int i = 0; i <= nX; i++) {
 
       x = xMin + i * xStep;
-      s = F * (x*x - y * y);
+      s = F * (x * x - y * y);
       t = F * 2 * x * y;
 
 
       std::cout << " 1 "<< " x " << x << " y " << y << " s " << s << " t " << t << std::endl;
-      planeVertices.push_back(glm::vec4(x,y,0,0));
+      planeVertices.push_back(glm::vec4(x,y,s,t));
 
-      s = F * (x*x - y * y);
+      s = F * (x * x - (y + yStep) * (y + yStep));
       t = F * 2 * x * (y + yStep);
       std::cout << " 2 "  << " x " << x << " y " << y + yStep << " s " << s << " t " << t << std::endl;
 
 
-      planeVertices.push_back(glm::vec4(x,y + yStep,0,0));
+      planeVertices.push_back(glm::vec4(x,y + yStep,s,t));
       if (i == nX) {
-	planeVertices.push_back(glm::vec4(x,y + yStep,0,0));
+	planeVertices.push_back(glm::vec4(x,y + yStep,s,t));
 
       }
     }
@@ -108,7 +108,7 @@ std::vector<glm::vec4> projection(int one, int two, int three) {
 // matrix
 void setOrientation(float oscillator, int numOne, int numTwo){
 
-float angle = oscillator; //* .01f;
+float angle = oscillator;
 glm::mat4 rotation = glm::mat4();
 
   std::cout << "angle=" << angle << ", "
@@ -116,6 +116,7 @@ glm::mat4 rotation = glm::mat4();
 	    << _v[5].y << ", "
 	    << _v[5].z << ", "
 	    << _v[5].w << std::endl;
+
 
   rotation[numOne][numOne] = cos(angle);
   rotation[numOne][numTwo] = sin(angle);
@@ -538,7 +539,7 @@ void _checkContext() {
 
         glEnable(GL_DEPTH_TEST);
 
-        //Enales wireframe
+        //Enables wireframe
         glPolygonMode(GL_FRONT, GL_LINE);
         glPolygonMode(GL_BACK, GL_LINE);
         if (glIsEnabled(GL_DEPTH_TEST)) {
@@ -624,7 +625,7 @@ void _initScene(){
 
         _planeCollection = new bsg::drawableCollection("planes");
 
-        _plane = new invisibleObj4D(1, 0, 0, 4, 4, 4, 4 );
+        _plane = new invisibleObj4D(1, 0, 0, 1, 1, 10, 10 );
 
         std::vector<glm::vec4> planeOneColors;
         for (int i = 0; i < _plane->getVertices().size(); i++){
@@ -642,18 +643,23 @@ void _initScene(){
         for (int i = 0; i < _plane->getVertices().size(); i++){
             planeFourColors.push_back(glm::vec4(0.98, 1.0, 0.1, 1));
         }
+
+        //y, s, t
         _planeSetOne = new drawableCompound4D(_shader, "planeOne", _plane, 1, 2, 3, planeOneColors);
         _planeSetOne->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetOne);
 
+        //x, s, t
         _planeSetTwo = new drawableCompound4D(_shader, "planeTwo", _plane, 0, 2, 3, planeTwoColors);
         _planeSetTwo->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetTwo);
 
+        //x , y, t
         _planeSetThree = new drawableCompound4D(_shader, "planeThree", _plane, 0, 1, 3, planeThreeColors);
         _planeSetThree->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetThree);
 
+        //x, y, s
         _planeSetFour = new drawableCompound4D(_shader, "planeFour", _plane, 0, 1, 2, planeFourColors);
         _planeSetFour->getObject()->setDrawType(GL_TRIANGLE_STRIP);
         _planeCollection->addObject(_planeSetFour);
@@ -661,7 +667,7 @@ void _initScene(){
         _axesSet = new bsg::drawableCompound(_shader);
         _axesSet->addObject(_axes);
         _cube->getCubes()->setScale(glm::vec3(2.0f,2.0f,2.0f));
-        _planeCollection->setScale(glm::vec3(1.5f,1.5f,1.5f));
+        _planeCollection->setScale(glm::vec3(2.5f,2.5f,2.5f));
 
         _scene.addObject(_planeCollection);
         //_scene.addObject(_rect);
@@ -749,8 +755,8 @@ void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
                 // _oscillator += _oscillationStep;
 
                 //Calls on the invisibleObj4D as we want to change the rotation matrix within 4 space
-                _cube->getInvisObj()->setOrientation(_oscillator,1,2);
-                _plane->setOrientation(_oscillator,1,2);
+                _cube->getInvisObj()->setOrientation(_oscillator,0,1);
+                _plane->setOrientation(_oscillator,0,1);
 
                 // Now the preliminaries are done, on to the actual drawing.
 
